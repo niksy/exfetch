@@ -1,7 +1,7 @@
 {
-  "name": "konvolo",
+  "name": "exfetch",
   "version": "0.0.0",
-  "description": "Enhanced Fetch API.",
+  "description": "Enhanced unfetch API.",
   "main": "index.cjs.js",
   "module": "index.esm.js",
   "author": "Ivan Nikolić <niksy5@gmail.com> (http://ivannikolic.com)",
@@ -38,6 +38,7 @@
     "@babel/plugin-transform-object-assign": "^7.2.0",
     "@babel/plugin-transform-runtime": "^7.2.0",
     "@babel/runtime": "^7.2.0",
+    "abortcontroller-polyfill": "^1.4.0",
     "babel-preset-niksy": "^4.1.0",
     "changelog-verify": "^1.1.2",
     "core-js": "^2.6.5",
@@ -67,6 +68,7 @@
     "karma-mocha-reporter": "^2.2.5",
     "karma-rollup-preprocessor": "^7.0.0",
     "karma-sourcemap-loader": "^0.3.7",
+    "lie": "^3.3.0",
     "lint-staged": "^9.5.0",
     "mocha": "^4.1.0",
     "np": "^3.0.4",
@@ -78,6 +80,8 @@
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",
     "rollup-plugin-node-resolve": "^4.0.0",
+    "rollup-plugin-polyfill": "^2.0.1",
+    "sinon": "^3.3.0",
     "version-changelog": "^3.1.1"
   },
   "engines": {
@@ -88,15 +92,16 @@
     "download",
     "fetch",
     "progress",
+    "unfetch",
     "upload",
     "xhr"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/niksy/konvolo.git"
+    "url": "git+https://github.com/niksy/exfetch.git"
   },
   "bugs": {
-    "url": "https://github.com/niksy/konvolo/issues"
+    "url": "https://github.com/niksy/exfetch/issues"
   },
-  "homepage": "https://github.com/niksy/konvolo#readme"
+  "homepage": "https://github.com/niksy/exfetch#readme"
 }

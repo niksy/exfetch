@@ -7,6 +7,7 @@ const nodeBuiltins = require('rollup-plugin-node-builtins');
 const globals = require('rollup-plugin-node-globals');
 const babel = require('rollup-plugin-babel');
 const istanbul = require('rollup-plugin-istanbul');
+const polyfill = require('rollup-plugin-polyfill');
 const rollupConfig = require('./rollup.config');
 
 let config;
@@ -26,7 +27,7 @@ if (local) {
 			username: process.env.BROWSER_STACK_USERNAME,
 			accessKey: process.env.BROWSER_STACK_ACCESS_KEY,
 			startTunnel: true,
-			project: 'konvolo',
+			project: 'exfetch',
 			name: 'Automated (Karma)',
 			build: 'Automated (Karma)'
 		},
@@ -36,7 +37,7 @@ if (local) {
 				browser: 'Chrome',
 				os: 'Windows',
 				'os_version': '7',
-				project: 'konvolo',
+				project: 'exfetch',
 				build: 'Automated (Karma)',
 				name: 'Chrome'
 			},
@@ -45,22 +46,22 @@ if (local) {
 				browser: 'Firefox',
 				os: 'Windows',
 				'os_version': '7',
-				project: 'konvolo',
+				project: 'exfetch',
 				build: 'Automated (Karma)',
 				name: 'Firefox'
 			},
-			'BS-IE9': {
+			'BS-IE11': {
 				base: 'BrowserStack',
 				browser: 'IE',
-				'browser_version': '9',
+				'browser_version': '11',
 				os: 'Windows',
 				'os_version': '7',
-				project: 'konvolo',
+				project: 'exfetch',
 				build: 'Automated (Karma)',
-				name: 'IE9'
+				name: 'IE11'
 			}
 		},
-		browsers: ['BS-Chrome', 'BS-Firefox', 'BS-IE9']
+		browsers: ['BS-Chrome', 'BS-Firefox', 'BS-IE11']
 	};
 }
 
@@ -80,6 +81,9 @@ module.exports = function(baseConfig) {
 		logLevel: baseConfig.LOG_INFO,
 		autoWatch: false,
 		client: {
+			mocha: {
+				timeout: 10000
+			},
 			captureConsole: true
 		},
 		browserConsoleLogOptions: {
@@ -87,8 +91,46 @@ module.exports = function(baseConfig) {
 			format: '%b %T: %m',
 			terminal: true
 		},
+		middleware: ['test'],
+		plugins: [
+			'karma-*',
+			{
+				'middleware:test': [
+					'factory',
+					function(config) {
+						return function(request, response, next) {
+							if (request.url === '/test/get') {
+								response.writeHead(200, {
+									'Content-Type': 'application/json'
+								});
+								response.end(
+									JSON.stringify({ response: 'becky' })
+								);
+								return;
+							}
+							if (request.url === '/test/delay') {
+								setTimeout(() => {
+									response.writeHead(200, {
+										'Content-Type': 'application/json'
+									});
+									response.end(
+										JSON.stringify({ response: 'becky' })
+									);
+								}, 1500);
+								return;
+							}
+							next();
+						};
+					}
+				]
+			}
+		],
 		rollupPreprocessor: {
 			plugins: [
+				polyfill(path.resolve(__dirname, 'test'), [
+					'lie/polyfill',
+					'abortcontroller-polyfill/dist/abortcontroller-polyfill-only'
+				]),
 				nodeBuiltins(),
 				babel({
 					exclude: 'node_modules/**',
@@ -114,7 +156,7 @@ module.exports = function(baseConfig) {
 			],
 			output: {
 				format: 'iife',
-				name: 'konvolo',
+				name: 'exfetch',
 				sourcemap: baseConfig.autoWatch ? false : 'inline', // Source map support has weird behavior in watch mode
 				intro: 'window.TYPED_ARRAY_SUPPORT = false;' // IE9
 			}
