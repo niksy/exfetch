@@ -44,14 +44,40 @@ it('should abort started request', async function() {
 	assert.equal(isAborted(), true);
 });
 
-it('should abort unstarted request with AbortController', async function() {
+it('should abort unstarted request with AbortController with custom functions', async function() {
 	const controller = new AbortController();
 	const signal = controller.signal;
 	const { request, abort, isAborted } = fn('/test/delay', { signal });
 
-	assert.throws(() => {
-		abort();
-	}, /AbortController\.abort/);
+	abort();
+
+	try {
+		await request();
+	} catch (error) {
+		assert.equal(error.name, 'AbortError');
+		assert.equal(isAborted(), true);
+	}
+});
+
+it('should abort started request with AbortController with custom functions', async function() {
+	const controller = new AbortController();
+	const signal = controller.signal;
+	const { request, abort, isAborted } = fn('/test/delay', { signal });
+
+	setTimeout(abort, 1000);
+
+	try {
+		await request();
+	} catch (error) {
+		assert.equal(error.name, 'AbortError');
+		assert.equal(isAborted(), true);
+	}
+});
+
+it('should abort unstarted request with AbortController with controller and signal', async function() {
+	const controller = new AbortController();
+	const signal = controller.signal;
+	const { request } = fn('/test/delay', { signal });
 
 	controller.abort();
 
@@ -59,31 +85,22 @@ it('should abort unstarted request with AbortController', async function() {
 		await request();
 	} catch (error) {
 		assert.equal(error.name, 'AbortError');
-		assert.throws(() => {
-			isAborted();
-		}, /AbortSignal\.aborted/);
+		assert.equal(signal.aborted, true);
 	}
 });
 
-it('should abort started request with AbortController', async function() {
+it('should abort started request with AbortController with controller and signal', async function() {
 	const controller = new AbortController();
 	const signal = controller.signal;
-	const { request, abort, isAborted } = fn('/test/delay', { signal });
+	const { request } = fn('/test/delay', { signal });
 
-	setTimeout(() => {
-		assert.throws(() => {
-			abort();
-		}, /AbortController\.abort/);
-		controller.abort();
-	}, 1000);
+	setTimeout(controller.abort.bind(controller), 1000);
 
 	try {
 		await request();
 	} catch (error) {
 		assert.equal(error.name, 'AbortError');
-		assert.throws(() => {
-			isAborted();
-		}, /AbortSignal\.aborted/);
+		assert.equal(signal.aborted, true);
 	}
 });
 

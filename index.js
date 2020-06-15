@@ -1,6 +1,22 @@
 import unfetch from 'unfetch';
 import mitt from 'mitt';
 
+/**
+ * @param  {string} eventName
+ *
+ * @returns {Event}
+ */
+function createNewEvent(eventName) {
+	let event;
+	if (typeof Event === 'function') {
+		event = new Event(eventName);
+	} else {
+		event = document.createEvent('Event');
+		event.initEvent(eventName, false, false);
+	}
+	return event;
+}
+
 export default (url, options = {}) => {
 	const { xhr, promise, isAborted: baseIsAborted, resolve, reject } = unfetch(
 		url,
@@ -33,7 +49,7 @@ export default (url, options = {}) => {
 	const request = resolvePendingPromise;
 
 	if (signal) {
-		let abortError;
+		let abortError, internalSignalAborted;
 		try {
 			abortError = new DOMException('Aborted', 'AbortError');
 		} catch (error) {
@@ -42,13 +58,20 @@ export default (url, options = {}) => {
 		}
 
 		isAborted = () => {
-			throw new Error('Use `AbortSignal.aborted` instead.');
+			if (internalSignalAborted) {
+				return internalSignalAborted;
+			}
+			return signal.aborted;
 		};
 		abort = () => {
-			throw new Error('Use `AbortController.abort()` instead.');
+			signal.dispatchEvent(createNewEvent('abort'));
 		};
 
 		const abortHandler = () => {
+			if (internalSignalAborted) {
+				return;
+			}
+			internalSignalAborted = true;
 			xhr.abort();
 			resolvePendingPromise();
 			reject()(abortError);
@@ -56,7 +79,7 @@ export default (url, options = {}) => {
 
 		signal.onabort = abortHandler;
 
-		if (signal.aborted) {
+		if (isAborted()) {
 			abortHandler();
 		}
 	} else {
